@@ -1,0 +1,15 @@
+import { useNavigation } from '@react-navigation/native';
+import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Brand, Card, PrimaryButton, StatusBadge } from '../components/ui';
+import { useStorage } from '../storage/StorageProvider';
+import { resumoFinanceiro } from '../utils/calculos';
+import { dataBrasileira, moeda } from '../utils/formatacao';
+import { colors, spacing } from '../theme';
+
+export function HomeScreen() {
+  const navigation = useNavigation<any>(); const { orcamentos, carregando } = useStorage();
+  const recentes = orcamentos.slice(0, 3); const total = orcamentos.reduce((soma, o) => soma + resumoFinanceiro(o).total, 0);
+  if (carregando) return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
+  return <SafeAreaView style={styles.page}><FlatList data={recentes} keyExtractor={(o) => o.id} contentContainerStyle={styles.content} ListHeaderComponent={<><Brand /><Text style={styles.title}>Seus orçamentos, sem complicação.</Text><PrimaryButton title="+ Novo Orçamento" onPress={() => navigation.navigate('Editor')} /><View style={styles.metrics}><Card style={styles.metric}><Text style={styles.metricValue}>{orcamentos.length}</Text><Text style={styles.muted}>salvos</Text></Card><Card style={styles.metric}><Text style={styles.metricValue}>{moeda(total)}</Text><Text style={styles.muted}>valor total</Text></Card></View><Text style={styles.section}>Recentes</Text></>} ListEmptyComponent={<Card><Text style={styles.empty}>Ainda não há orçamentos. Crie o primeiro para começar.</Text></Card>} renderItem={({ item }) => <Card style={styles.row}><View><Text style={styles.number}>{item.numero}</Text><Text style={styles.client}>{item.cliente.nome}</Text><Text style={styles.muted}>{dataBrasileira(item.atualizadoEm)}</Text></View><View style={styles.right}><StatusBadge status={item.status} /><Text style={styles.value}>{moeda(resumoFinanceiro(item).total)}</Text></View></Card>} /></SafeAreaView>;
+}
+const styles = StyleSheet.create({ page: { flex: 1, backgroundColor: colors.background }, content: { padding: spacing.md, gap: spacing.md }, center: { flex: 1, alignItems: 'center', justifyContent: 'center' }, title: { color: colors.text, fontSize: 20, fontWeight: '600', marginVertical: spacing.lg }, metrics: { flexDirection: 'row', gap: spacing.sm }, metric: { flex: 1 }, metricValue: { color: colors.primary, fontSize: 20, fontWeight: '800' }, muted: { color: colors.muted, marginTop: 3 }, section: { color: colors.text, fontSize: 17, fontWeight: '800', marginTop: spacing.sm }, row: { flexDirection: 'row', justifyContent: 'space-between' }, number: { fontSize: 12, color: colors.primary, fontWeight: '700' }, client: { fontSize: 16, color: colors.text, fontWeight: '700', marginTop: 4 }, right: { alignItems: 'flex-end', justifyContent: 'space-between' }, value: { color: colors.text, fontWeight: '800', marginTop: 10 }, empty: { color: colors.muted, textAlign: 'center', lineHeight: 21 } });
