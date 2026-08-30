@@ -13,6 +13,12 @@ type ScreenProps = {
   scroll?: boolean;
   contentContainerStyle?: ScrollViewProps['contentContainerStyle'];
   edges?: Edge[];
+  /**
+   * Cabeçalho fixo (não rola com o conteúdo), renderizado dentro da Safe Area.
+   * Use para substituir o header nativo quando ele precisar do mesmo
+   * comportamento de Safe Area do restante da tela (ex.: telas com notch).
+   */
+  header?: ReactNode;
 };
 
 const DEFAULT_EDGES: Edge[] = ['top', 'left', 'right'];
@@ -24,10 +30,11 @@ const DEFAULT_EDGES: Edge[] = ['top', 'left', 'right'];
  * 2) Comportamento de teclado: quando `scroll` é true, o conteúdo fica dentro de um
  *    ScrollView que se ajusta ao teclado, permitindo rolar até o último campo/botão.
  */
-export function Screen({ children, scroll = false, contentContainerStyle, edges = DEFAULT_EDGES }: ScreenProps) {
+export function Screen({ children, scroll = false, contentContainerStyle, edges = DEFAULT_EDGES, header }: ScreenProps) {
   if (!scroll) {
     return (
       <SafeAreaView style={styles.page} edges={edges}>
+        {header}
         {children}
       </SafeAreaView>
     );
@@ -35,6 +42,7 @@ export function Screen({ children, scroll = false, contentContainerStyle, edges 
 
   return (
     <SafeAreaView style={styles.page} edges={edges}>
+      {header}
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
