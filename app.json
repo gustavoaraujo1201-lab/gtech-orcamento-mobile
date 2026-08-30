@@ -14,7 +14,7 @@
     "android": {
       "package": "com.gtechprime.orcamento",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon/app-icon.png",
+        "foregroundImage": "./assets/images/icon/app-icon-adaptive-foreground.png",
         "backgroundColor": "#0B0F1A"
       }
     },
