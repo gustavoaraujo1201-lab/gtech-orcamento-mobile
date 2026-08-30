@@ -5,14 +5,30 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/images/icon/app-icon.png",
+    "splash": {
+      "image": "./assets/images/icon/app-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0F1A"
+    },
     "android": {
-      "package": "com.gtechprime.orcamento"
+      "package": "com.gtechprime.orcamento",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon/app-icon.png",
+        "backgroundColor": "#0B0F1A"
+      }
     },
     "ios": {
       "bundleIdentifier": "com.gtechprime.orcamento"
     },
     "plugins": [
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4058ffb4-6b55-4247-88c2-b19317ba399d"
+      }
+    },
+    "owner": "gustavoaraujo12"
   }
 }
