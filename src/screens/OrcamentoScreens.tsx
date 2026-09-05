@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react';
 import { Screen } from '../components/Screen';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Card, Field, PrimaryButton, SecondaryButton, StatusBadge } from '../components/ui';
+import { ClienteWebPicker } from '../components/ClienteWebPicker';
+import { ClienteWeb } from '../services/clientesWebService';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useStorage } from '../storage/StorageProvider';
 import { Desconto, ItemOrcamento, Orcamento, StatusOrcamento } from '../types/orcamento';
@@ -21,6 +23,15 @@ export function EditorOrcamentoScreen() {
   const navigation = useNavigation<any>(); const route = useRoute<RouteProp<RootStackParamList, 'Editor'>>(); const { orcamentos, salvarOrcamento } = useStorage();
   const existente = orcamentos.find((o) => o.id === route.params?.id); const [orcamento, setOrcamento] = useState<Orcamento>(existente || vazio()); const resumo = useMemo(() => resumoFinanceiro(orcamento), [orcamento]);
   function cliente(campo: keyof Orcamento['cliente'], valor: string) { setOrcamento({ ...orcamento, cliente: { ...orcamento.cliente, [campo]: valor } }); }
+  function preencherClienteWeb(clienteWeb: ClienteWeb) {
+    setOrcamento({ ...orcamento, cliente: {
+      nome: clienteWeb.nome || orcamento.cliente.nome,
+      cpfCnpj: clienteWeb.cpfCnpj || orcamento.cliente.cpfCnpj,
+      telefone: clienteWeb.telefone || orcamento.cliente.telefone,
+      email: clienteWeb.email || orcamento.cliente.email,
+      endereco: clienteWeb.endereco || orcamento.cliente.endereco,
+    } });
+  }
   function item(id: string, campo: keyof ItemOrcamento, valor: string) { setOrcamento({ ...orcamento, itens: orcamento.itens.map((atual) => atual.id === id ? { ...atual, [campo]: campo === 'descricao' ? valor : paraNumero(valor) } : atual) }); }
   async function salvar() {
     const erro = validarOrcamento(orcamento);
@@ -30,7 +41,7 @@ export function EditorOrcamentoScreen() {
     await salvarOrcamento(salvo);
     navigation.replace('Detalhe', { id: salvo.id });
   }
-  return <Screen scroll header={<ScreenHeader title="Orçamento" onBack={() => navigation.goBack()} />} contentContainerStyle={styles.content}><Text style={styles.section}>Cliente</Text><Field label="Nome *" value={orcamento.cliente.nome} onChangeText={(v) => cliente('nome', v)} /><Field label="CPF/CNPJ" value={orcamento.cliente.cpfCnpj} onChangeText={(v) => cliente('cpfCnpj', v)} /><Field label="Telefone" value={orcamento.cliente.telefone} keyboardType="phone-pad" onChangeText={(v) => cliente('telefone', v)} /><Field label="E-mail" value={orcamento.cliente.email} keyboardType="email-address" autoCapitalize="none" onChangeText={(v) => cliente('email', v)} /><Field label="Endereço" value={orcamento.cliente.endereco} onChangeText={(v) => cliente('endereco', v)} />
+  return <Screen scroll header={<ScreenHeader title="Orçamento" onBack={() => navigation.goBack()} />} contentContainerStyle={styles.content}><Text style={styles.section}>Cliente</Text><ClienteWebPicker onSelecionar={preencherClienteWeb} /><Field label="Nome *" value={orcamento.cliente.nome} onChangeText={(v) => cliente('nome', v)} /><Field label="CPF/CNPJ" value={orcamento.cliente.cpfCnpj} onChangeText={(v) => cliente('cpfCnpj', v)} /><Field label="Telefone" value={orcamento.cliente.telefone} keyboardType="phone-pad" onChangeText={(v) => cliente('telefone', v)} /><Field label="E-mail" value={orcamento.cliente.email} keyboardType="email-address" autoCapitalize="none" onChangeText={(v) => cliente('email', v)} /><Field label="Endereço" value={orcamento.cliente.endereco} onChangeText={(v) => cliente('endereco', v)} />
     <Text style={styles.section}>Itens</Text>{orcamento.itens.map((atual, indice) => <Card style={styles.item} key={atual.id}><View style={styles.itemHead}><Text style={styles.itemTitle}>Item {indice + 1}</Text>{orcamento.itens.length > 1 && <Text accessibilityRole="button" onPress={() => setOrcamento({ ...orcamento, itens: orcamento.itens.filter((i) => i.id !== atual.id) })} style={styles.remove}>Excluir</Text>}</View><Field label="Descrição *" value={atual.descricao} onChangeText={(v) => item(atual.id, 'descricao', v)} /><View style={styles.twoFields}><View style={styles.half}><Field label="Quantidade *" value={String(atual.quantidade)} keyboardType="decimal-pad" onChangeText={(v) => item(atual.id, 'quantidade', v)} /></View><View style={styles.half}><Field label="Valor unitário *" value={String(atual.valorUnitario)} keyboardType="decimal-pad" onChangeText={(v) => item(atual.id, 'valorUnitario', v)} /></View></View><Text style={styles.itemSubtotal}>Subtotal: {moeda(subtotalItem(atual))}</Text></Card>)}<SecondaryButton title="+ Adicionar item" onPress={() => setOrcamento({ ...orcamento, itens: [...orcamento.itens, novoItem()] })} />
     <Text style={styles.section}>Desconto</Text><View style={styles.discountType}><Pressable onPress={() => setOrcamento({ ...orcamento, desconto: { ...orcamento.desconto, tipo: 'valor' } })} style={[styles.typeButton, orcamento.desconto.tipo === 'valor' && styles.activeType]}><Text style={orcamento.desconto.tipo === 'valor' ? styles.activeTypeText : styles.typeText}>Em valor (R$)</Text></Pressable><Pressable onPress={() => setOrcamento({ ...orcamento, desconto: { ...orcamento.desconto, tipo: 'percentual' } })} style={[styles.typeButton, orcamento.desconto.tipo === 'percentual' && styles.activeType]}><Text style={orcamento.desconto.tipo === 'percentual' ? styles.activeTypeText : styles.typeText}>Percentual (%)</Text></Pressable></View><Field label="Desconto" value={String(orcamento.desconto.valor)} keyboardType="decimal-pad" onChangeText={(v) => setOrcamento({ ...orcamento, desconto: { ...orcamento.desconto, valor: paraNumero(v) } })} /><Field label="Observações" value={orcamento.observacoes} multiline onChangeText={(v) => setOrcamento({ ...orcamento, observacoes: v })} placeholder="Ex.: Orçamento válido por 10 dias." />
     <Card style={styles.summary}><Text>Subtotal <Text style={styles.total}>{moeda(resumo.subtotal)}</Text></Text><Text>Desconto <Text style={styles.total}>{moeda(resumo.desconto)}</Text></Text><View style={styles.totalLine}><Text style={styles.totalLabel}>TOTAL</Text><Text style={styles.totalValue}>{moeda(resumo.total)}</Text></View></Card><PrimaryButton title="Salvar orçamento" onPress={salvar} /></Screen>;
