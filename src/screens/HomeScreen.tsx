@@ -1,14 +1,25 @@
 import { useNavigation } from '@react-navigation/native';
+import { useEffect } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '../components/Screen';
 import { Brand, Card, PrimaryButton, StatusBadge } from '../components/ui';
 import { useStorage } from '../storage/StorageProvider';
+import { buscarOrcamentosWebParaImportar } from '../services/orcamentosWebService';
 import { resumoFinanceiro } from '../utils/calculos';
 import { dataBrasileira, moeda } from '../utils/formatacao';
 import { colors, spacing } from '../theme';
 
 export function HomeScreen() {
-  const navigation = useNavigation<any>(); const { orcamentos, carregando } = useStorage();
+  const navigation = useNavigation<any>(); const { orcamentos, carregando, salvarOrcamento } = useStorage();
+  // Traz os orçamentos já feitos no sistema Web (mesmo Supabase) e salva
+  // localmente, usando a MESMA função de salvar que o app já usa. Como o id
+  // gerado é sempre o mesmo para o mesmo orçamento do Web, rodar de novo não
+  // duplica nada — só mantém atualizado.
+  useEffect(() => {
+    buscarOrcamentosWebParaImportar().then((importados) => {
+      importados.forEach((orcamento) => salvarOrcamento(orcamento));
+    });
+  }, [salvarOrcamento]);
   const recentes = orcamentos.slice(0, 3); const total = orcamentos.reduce((soma, o) => soma + resumoFinanceiro(o).total, 0);
   if (carregando) return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
   return <Screen><FlatList data={recentes} keyExtractor={(o) => o.id} contentContainerStyle={styles.content} ListHeaderComponent={<><Brand /><Text style={styles.title}>Seus orçamentos, sem complicação.</Text><PrimaryButton title="+ Novo Orçamento" onPress={() => navigation.navigate('Editor')} /><View style={styles.metrics}><Card style={styles.metric}><Text style={styles.metricValue}>{orcamentos.length}</Text><Text style={styles.muted}>salvos</Text></Card><Card style={styles.metric}><Text style={styles.metricValue}>{moeda(total)}</Text><Text style={styles.muted}>valor total</Text></Card></View><Text style={styles.section}>Recentes</Text></>} ListEmptyComponent={<Card><Text style={styles.empty}>Ainda não há orçamentos. Crie o primeiro para começar.</Text></Card>} renderItem={({ item }) => <Card style={styles.row}><View><Text style={styles.number}>{item.numero}</Text><Text style={styles.client}>{item.cliente.nome}</Text><Text style={styles.muted}>{dataBrasileira(item.atualizadoEm)}</Text></View><View style={styles.right}><StatusBadge status={item.status} /><Text style={styles.value}>{moeda(resumoFinanceiro(item).total)}</Text></View></Card>} /></Screen>;
