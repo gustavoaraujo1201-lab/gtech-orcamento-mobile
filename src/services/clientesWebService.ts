@@ -26,7 +26,10 @@ function normalizarLinha(linha: Record<string, unknown>): ClienteWeb {
 export async function buscarClientesWeb(termo: string): Promise<ClienteWeb[]> {
   const { data: sessaoAtual } = await supabase.auth.getSession();
   const usuarioId = sessaoAtual.session?.user.id;
-  if (!usuarioId) return [];
+  if (!usuarioId) {
+    console.error('[clientesWebService] nenhuma sessão ativa encontrada ao buscar clientes.');
+    return [];
+  }
 
   let consulta = supabase
     .from('clients')
@@ -38,6 +41,11 @@ export async function buscarClientesWeb(termo: string): Promise<ClienteWeb[]> {
   if (termo.trim()) consulta = consulta.ilike('name', `%${termo.trim()}%`);
 
   const { data, error } = await consulta;
-  if (error || !data) return [];
+  if (error) {
+    console.error('[clientesWebService] erro ao buscar clientes na tabela "clients":', JSON.stringify(error, null, 2));
+    return [];
+  }
+  if (!data) return [];
+  console.log(`[clientesWebService] ${data.length} cliente(s) encontrado(s) para usuarioId=${usuarioId}`);
   return data.map(normalizarLinha);
 }
