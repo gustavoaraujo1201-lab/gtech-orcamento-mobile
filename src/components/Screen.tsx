@@ -11,6 +11,13 @@ type ScreenProps = {
    * onde só precisamos da Safe Area.
    */
   scroll?: boolean;
+  /**
+   * Só tem efeito quando scroll=true. true (padrão) ativa o ajuste automático
+   * de teclado (KeyboardAvoidingView) — use em telas com campos de texto.
+   * false rola o conteúdo sem essa camada — use em telas só de leitura
+   * (sem TextInput nenhum), evitando recálculos de altura desnecessários.
+   */
+  teclado?: boolean;
   contentContainerStyle?: ScrollViewProps['contentContainerStyle'];
   edges?: Edge[];
   /**
@@ -30,7 +37,7 @@ const DEFAULT_EDGES: Edge[] = ['top', 'left', 'right'];
  * 2) Comportamento de teclado: quando `scroll` é true, o conteúdo fica dentro de um
  *    ScrollView que se ajusta ao teclado, permitindo rolar até o último campo/botão.
  */
-export function Screen({ children, scroll = false, contentContainerStyle, edges = DEFAULT_EDGES, header }: ScreenProps) {
+export function Screen({ children, scroll = false, teclado = true, contentContainerStyle, edges = DEFAULT_EDGES, header }: ScreenProps) {
   if (!scroll) {
     return (
       <SafeAreaView style={styles.page} edges={edges}>
@@ -40,21 +47,26 @@ export function Screen({ children, scroll = false, contentContainerStyle, edges 
     );
   }
 
+  const conteudoRolavel = (
+    <ScrollView
+      contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+    >
+      {children}
+    </ScrollView>
+  );
+
   return (
     <SafeAreaView style={styles.page} edges={edges}>
       {header}
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView
-          contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-        >
-          {children}
-        </ScrollView>
-      </KeyboardAvoidingView>
+      {teclado ? (
+        <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          {conteudoRolavel}
+        </KeyboardAvoidingView>
+      ) : (
+        conteudoRolavel
+      )}
     </SafeAreaView>
   );
 }
