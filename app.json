@@ -22,7 +22,17 @@
       "bundleIdentifier": "com.gtechprime.orcamento"
     },
     "plugins": [
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "buildToolsVersion": "36.0.0"
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {
