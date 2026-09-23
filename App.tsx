@@ -3,9 +3,9 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { AuthNavigator } from './src/navigation/AuthNavigator';
 import { StorageProvider } from './src/storage/StorageProvider';
 import { AuthProvider, useAuth } from './src/auth/AuthProvider';
-import { LoginScreen } from './src/screens/LoginScreen';
 import { colors } from './src/theme';
 
 // Decide entre Login e o app autenticado, com base na sessão do Supabase.
@@ -19,7 +19,7 @@ function Raiz() {
       </View>
     );
   }
-  if (!session) return <LoginScreen />;
+  if (!session) return <AuthNavigator />;
   return (
     <StorageProvider>
       <AppNavigator />
