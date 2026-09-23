@@ -6,43 +6,53 @@ import { Brand, Field, PrimaryButton } from '../components/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { colors, spacing } from '../theme';
 
-export function LoginScreen() {
-  // TODO: troque "any" pelo tipo real da sua stack de navegação, quando definida.
+export function RegisterScreen() {
+  // TODO: troque "any" pelo tipo real da sua stack de navegação
+  // (ex.: NativeStackNavigationProp<RootStackParamList, 'Register'>)
+  // assim que ela estiver definida, para ter autocomplete e checagem de tipos.
   const navigation = useNavigation<any>();
-  const { entrar, recuperarSenha } = useAuth();
+  const { cadastrar } = useAuth();
+
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
 
-  async function handleEntrar() {
+  async function handleCadastrar() {
     if (enviando) return;
-    if (!email.trim() || !senha) {
-      setErro('Informe e-mail e senha.');
-      return;
-    }
-    setErro('');
-    setMensagem('');
-    setEnviando(true);
-    const resultado = await entrar(email, senha);
-    setEnviando(false);
-    if (resultado.erro) setErro(resultado.erro);
-  }
 
-  async function handleEsqueciSenha() {
-    if (enviando) return;
-    if (!email.trim()) {
-      setErro('Informe seu e-mail para receber o link de recuperação.');
+    if (!nome.trim() || !email.trim() || !senha) {
+      setErro('Preencha nome, e-mail e senha.');
       return;
     }
+    if (senha.length < 6) {
+      setErro('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    if (senha !== confirmarSenha) {
+      setErro('As senhas não conferem.');
+      return;
+    }
+
     setErro('');
     setMensagem('');
     setEnviando(true);
-    const resultado = await recuperarSenha(email);
+    const resultado = await cadastrar(nome, email, senha);
     setEnviando(false);
-    if (resultado.erro) setErro(resultado.erro);
-    else setMensagem('Enviamos um link de recuperação para o seu e-mail.');
+
+    if (resultado.erro) {
+      setErro(resultado.erro);
+      return;
+    }
+    if (resultado.precisaConfirmarEmail) {
+      setMensagem('Cadastro realizado! Confirme seu e-mail antes de entrar.');
+      return;
+    }
+    // Se o projeto Supabase não exige confirmação de e-mail, o usuário já
+    // fica autenticado aqui, e o AuthProvider troca a tela sozinho.
   }
 
   return (
@@ -50,14 +60,15 @@ export function LoginScreen() {
       <View style={styles.brandArea}>
         <Brand />
       </View>
+      <Field label="Nome" value={nome} onChangeText={setNome} autoCapitalize="words" editable={!enviando} />
       <Field label="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" editable={!enviando} />
       <Field label="Senha" value={senha} onChangeText={setSenha} secureTextEntry editable={!enviando} />
+      <Field label="Confirmar senha" value={confirmarSenha} onChangeText={setConfirmarSenha} secureTextEntry editable={!enviando} />
       {erro ? <Text style={styles.erro}>{erro}</Text> : null}
       {mensagem ? <Text style={styles.mensagem}>{mensagem}</Text> : null}
-      <PrimaryButton title={enviando ? 'Entrando...' : 'Entrar'} onPress={handleEntrar} disabled={enviando} />
+      <PrimaryButton title={enviando ? 'Cadastrando...' : 'Criar conta'} onPress={handleCadastrar} disabled={enviando} />
       {enviando && <ActivityIndicator color={colors.primary} style={styles.spinner} />}
-      <Text accessibilityRole="button" onPress={handleEsqueciSenha} style={styles.link}>Esqueci minha senha</Text>
-      <Text accessibilityRole="button" onPress={() => navigation.navigate('Register')} style={styles.link}>Ainda não tem conta? Cadastre-se</Text>
+      <Text accessibilityRole="button" onPress={() => navigation.goBack()} style={styles.link}>Já tenho conta, entrar</Text>
     </Screen>
   );
 }
