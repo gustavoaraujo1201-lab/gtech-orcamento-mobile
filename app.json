@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "Gtech Orçamento Mobile",
+    "name": "Gtech Orçamento Orçamento",
     "slug": "gtech-orcamento-mobile",
     "version": "1.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/images/icon/app-icon.png",
     "splash": {
-      "image": "./assets/images/icon/app-icon.png",
+      "image": "./assets/images/logo/gtech-logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#0B0F1A"
     },
