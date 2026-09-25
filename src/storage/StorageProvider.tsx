@@ -3,16 +3,20 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 import { empresaPadrao } from '../constants/defaults';
 import { Empresa, Orcamento } from '../types/orcamento';
 import { useAuth } from '../auth/AuthProvider';
+import { salvarOrcamentoWeb, excluirOrcamentoWeb } from '../services/orcamentosSyncService';
 
 const ORCAMENTOS_PREFIXO = '@gtech/orcamentos';
 const EMPRESA_PREFIXO = '@gtech/empresa';
+
+type ResultadoSalvarOrcamento = { orcamento?: Orcamento; erro?: string };
+type ResultadoExcluirOrcamento = { erro?: string };
 
 type StorageContextValue = {
   orcamentos: Orcamento[];
   empresa: Empresa;
   carregando: boolean;
-  salvarOrcamento: (orcamento: Orcamento) => Promise<void>;
-  excluirOrcamento: (id: string) => Promise<void>;
+  salvarOrcamento: (orcamento: Orcamento) => Promise<ResultadoSalvarOrcamento>;
+  excluirOrcamento: (orcamento: Orcamento) => Promise<ResultadoExcluirOrcamento>;
   salvarEmpresa: (empresa: Empresa) => Promise<void>;
 };
 
@@ -45,21 +49,34 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     } finally { setCarregando(false); }
   }
 
-  const salvarOrcamento = useCallback(async (orcamento: Orcamento) => {
+  const salvarOrcamento = useCallback(async (orcamento: Orcamento): Promise<ResultadoSalvarOrcamento> => {
+    const resultado = await salvarOrcamentoWeb(orcamento);
+    if (resultado.erro || !resultado.orcamento) {
+      // Não salva localmente como se tivesse dado certo: assim o usuário
+      // sabe que precisa tentar de novo, em vez de achar que já sincronizou.
+      return { erro: resultado.erro ?? 'Não foi possível salvar o orçamento.' };
+    }
+    const final = resultado.orcamento;
     setOrcamentos((atuais) => {
-      const existe = atuais.some((atual) => atual.id === orcamento.id);
-      const atualizados = existe ? atuais.map((atual) => atual.id === orcamento.id ? orcamento : atual) : [orcamento, ...atuais];
+      // Remove tanto o id "rascunho" antigo (1ª sincronização, quando o id
+      // muda) quanto uma cópia antiga com o id final, se já existir.
+      const semAntigos = atuais.filter((atual) => atual.id !== orcamento.id && atual.id !== final.id);
+      const atualizados = [final, ...semAntigos];
       AsyncStorage.setItem(ORCAMENTOS_KEY, JSON.stringify(atualizados));
       return atualizados;
     });
+    return { orcamento: final };
   }, [ORCAMENTOS_KEY]);
 
-  const excluirOrcamento = useCallback(async (id: string) => {
+  const excluirOrcamento = useCallback(async (orcamento: Orcamento): Promise<ResultadoExcluirOrcamento> => {
+    const resultado = await excluirOrcamentoWeb(orcamento);
+    if (resultado.erro) return resultado;
     setOrcamentos((atuais) => {
-      const atualizados = atuais.filter((orcamento) => orcamento.id !== id);
+      const atualizados = atuais.filter((atual) => atual.id !== orcamento.id);
       AsyncStorage.setItem(ORCAMENTOS_KEY, JSON.stringify(atualizados));
       return atualizados;
     });
+    return {};
   }, [ORCAMENTOS_KEY]);
 
   const salvarEmpresa = useCallback(async (dados: Empresa) => {

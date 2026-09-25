@@ -62,6 +62,7 @@ function normalizarOrcamento(quote: QuoteWebRow, cliente: ClienteWebRow | undefi
       telefone: paraTexto(cliente?.phone),
       email: '',
       endereco: paraTexto(cliente?.address),
+      clienteWebId: cliente?.id,
     },
     itens: normalizarItens(quote.items),
     // A coluna "desconto" do Web guarda um valor numérico simples (não tem
@@ -69,9 +70,6 @@ function normalizarOrcamento(quote: QuoteWebRow, cliente: ClienteWebRow | undefi
     // desconto EM VALOR. Se no Web isso na verdade for percentual, é só avisar.
     desconto: { tipo: 'valor', valor: paraNumero(quote.desconto) },
     observacoes: paraTexto(quote.notes),
-    // O Web não tem coluna de status equivalente à do mobile; como são
-    // orçamentos que já existiam prontos, marcamos como "aprovado" por padrão.
-    status: 'aprovado',
     criadoEm,
     atualizadoEm: quote.updated_at ?? criadoEm,
   };

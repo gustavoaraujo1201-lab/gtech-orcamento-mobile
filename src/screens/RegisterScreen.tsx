@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '../components/Screen';
 import { Brand, Field, PrimaryButton } from '../components/ui';
@@ -58,6 +58,7 @@ export function RegisterScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <View style={styles.brandArea}>
+        <Image source={require('../../assets/images/logo/gtech-prime-logo.png')} style={styles.logo} resizeMode="contain" />
         <Brand />
       </View>
       <Field label="Nome" value={nome} onChangeText={setNome} autoCapitalize="words" editable={!enviando} />
@@ -76,6 +77,7 @@ export function RegisterScreen() {
 const styles = StyleSheet.create({
   content: { padding: spacing.md, flexGrow: 1, justifyContent: 'center' },
   brandArea: { alignItems: 'center', marginBottom: spacing.xl },
+  logo: { width: 96, height: 96, marginBottom: spacing.sm },
   erro: { color: colors.danger, textAlign: 'center', marginBottom: spacing.sm },
   mensagem: { color: colors.success, textAlign: 'center', marginBottom: spacing.sm },
   spinner: { marginTop: spacing.sm },

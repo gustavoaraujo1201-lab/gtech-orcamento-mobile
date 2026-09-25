@@ -10,8 +10,9 @@ export type ClienteWeb = {
 };
 
 // A tabela "clients" já existe no Supabase do sistema Web, com RLS por usuário
-// (coluna user_id). Aqui só LEMOS esses dados — nada é criado, alterado ou
-// apagado nessa tabela a partir do mobile.
+// (coluna user_id). Aqui LEMOS esses dados (buscarClientesWeb) e também
+// ESCREVEMOS (salvarClienteWeb), para o mobile poder criar/editar clientes
+// que também aparecem no sistema Web.
 function normalizarLinha(linha: Record<string, unknown>): ClienteWeb {
   return {
     id: String(linha.id ?? ''),
@@ -48,4 +49,51 @@ export async function buscarClientesWeb(termo: string): Promise<ClienteWeb[]> {
   if (!data) return [];
   console.log(`[clientesWebService] ${data.length} cliente(s) encontrado(s) para usuarioId=${usuarioId}`);
   return data.map(normalizarLinha);
+}
+
+type DadosClienteParaSalvar = {
+  nome: string;
+  cpfCnpj?: string;
+  telefone?: string;
+  endereco?: string;
+  // Se vier preenchido, atualiza o cliente existente; se não, cria um novo.
+  clienteWebId?: string;
+};
+
+// Nota: a tabela "clients" não tem coluna de e-mail — por isso esse campo
+// não é gravado aqui, mesmo que o cliente do orçamento tenha um preenchido.
+export async function salvarClienteWeb(usuarioId: string, cliente: DadosClienteParaSalvar): Promise<{ id?: string; erro?: string }> {
+  const nome = cliente.nome.trim();
+  if (!nome) return { erro: 'O cliente precisa ter um nome para ser salvo.' };
+
+  const payload = {
+    user_id: usuarioId,
+    name: nome,
+    cnpj_cpf: cliente.cpfCnpj?.trim() || null,
+    phone: cliente.telefone?.trim() || null,
+    address: cliente.endereco?.trim() || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (cliente.clienteWebId) {
+    const { data, error } = await supabase
+      .from('clients')
+      .update(payload)
+      .eq('id', cliente.clienteWebId)
+      .eq('user_id', usuarioId)
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[clientesWebService] erro ao atualizar cliente:', JSON.stringify(error, null, 2));
+      return { erro: error.message };
+    }
+    return { id: data.id };
+  }
+
+  const { data, error } = await supabase.from('clients').insert(payload).select('id').single();
+  if (error) {
+    console.error('[clientesWebService] erro ao criar cliente:', JSON.stringify(error, null, 2));
+    return { erro: error.message };
+  }
+  return { id: data.id };
 }

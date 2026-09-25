@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "Gtech Orçamento Orçamento",
+    "name": "GTech Prime Orçamento",
     "slug": "gtech-orcamento-mobile",
     "version": "1.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/images/icon/app-icon.png",
     "splash": {
-      "image": "./assets/images/logo/gtech-logo.png",
+      "image": "./assets/images/logo/gtech-prime-logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#0B0F1A"
     },
     "android": {
       "package": "com.gtechprime.orcamento",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon/app-icon-adaptive-foreground.png",
         "backgroundColor": "#0B0F1A"

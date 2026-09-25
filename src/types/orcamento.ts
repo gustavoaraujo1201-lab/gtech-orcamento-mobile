@@ -1,4 +1,3 @@
-export type StatusOrcamento = 'rascunho' | 'enviado' | 'aprovado' | 'recusado';
 export type TipoDesconto = 'valor' | 'percentual';
 
 export type Cliente = {
@@ -7,6 +6,11 @@ export type Cliente = {
   telefone?: string;
   email?: string;
   endereco?: string;
+  // Preenchido quando o cliente já existe na tabela "clients" do Supabase
+  // (selecionado via ClienteWebPicker, ou depois da 1ª sincronização de um
+  // cliente digitado manualmente). Sem isso, cada salvamento criaria um
+  // cliente novo duplicado no banco em vez de atualizar o existente.
+  clienteWebId?: string;
 };
 
 export type ItemOrcamento = {
@@ -25,7 +29,6 @@ export type Orcamento = {
   itens: ItemOrcamento[];
   desconto: Desconto;
   observacoes: string;
-  status: StatusOrcamento;
   criadoEm: string;
   atualizadoEm: string;
 };
